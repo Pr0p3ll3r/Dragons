@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4eb59957a5926c146aea68cc8edd8634, type: 3}
+  m_Name: BlueprintTimeDragon
+  m_EditorClassIdentifier: 
+  ID: 14
+  itemName: Blueprint Time Dragon
+  icon: {fileID: 21300000, guid: 008f6586af382402781fcd8f1669bceb, type: 3}
+  itemType: 0
+  description: 
+  maxInStack: 999
+  stackable: 0
+  dragon: {fileID: 11400000, guid: 97c75e039f46b2e4985029494c2998cb, type: 2}
+  type: 1
+  resources: []

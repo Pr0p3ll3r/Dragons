@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 738757059f0a540449906ff95959176a, type: 3}
+  m_Name: DemonDragon
+  m_EditorClassIdentifier: 
+  ID: 16
+  dragonName: Demon Dragon
+  look: {fileID: 21300000, guid: 1501b35d73a48c744bdf32ab20d7e6ce, type: 3}
+  eggLook: {fileID: 21300000, guid: 85eb5849285492b4cb4790d4ce5710a3, type: 3}
+  hatchingTime: 15
+  eatingTime: 5
+  isEgg: 1
+  toName: 0
+  isAdult: 0
+  level: 1
+  remainPoints: 0
+  hatching: 0
+  shown: 0
+  onExpedition: 0
+  loot: 0
+  canEat: 1
+  index: -1
+  specialSkill: 0
+  maxHealth: 100
+  currentHealth: 100
+  stats:
+  - baseValue: 1
+    statType: 0
+    modifiers: 
+  - baseValue: 0
+    statType: 1
+    modifiers: 
+  - baseValue: 0
+    statType: 2
+    modifiers: 
+  - baseValue: 0
+    statType: 3
+    modifiers: 
+  - baseValue: 0
+    statType: 4
+    modifiers: 
+  equipment:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  rewardGold: 0
+  rewardSilver: 0
+  remainingHatchingTime: 0
+  remainingEatingTime: 0
+  remainingExpeditionTime: 0
+  currentExpedition: 0
