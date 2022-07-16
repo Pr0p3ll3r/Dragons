@@ -17,21 +17,24 @@ public class Stat
     [SerializeField] private int baseValue;
     public StatType statType;
 
-    [SerializeField]
-    private List<int> modifiers = new List<int>();
+    private readonly List<int> modifiers = new List<int>();
 
-    public Stat(int _baseValue)
+    public Stat(int _baseValue, StatType _statType)
     {
         baseValue = _baseValue;
+        statType = _statType;
         modifiers = new List<int>();
     }
 
     public int GetValue()
     {
         int finalValue = baseValue;
-        for (int i = 0; i < modifiers.Count; i++)
+        if(modifiers != null)
         {
-            finalValue += modifiers[i];
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                finalValue += modifiers[i];
+            }
         }
         return finalValue;
     }

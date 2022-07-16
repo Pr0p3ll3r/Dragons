@@ -13,17 +13,17 @@ public class MouseDrag : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
         if (dragging)
         {
-            Vector3 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector3 move = mousePos - mouseStartPos;
-            transform.position = objectStartPos + move;
+            transform.root.position = objectStartPos + move;
         }
     }
 
     private void OnMouseDown()
     {
         dragging = true;
-        mouseStartPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
-        objectStartPos = transform.position;
+        mouseStartPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        objectStartPos = transform.root.position;
     }
 
     private void OnMouseUp()
@@ -34,8 +34,8 @@ public class MouseDrag : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     public void OnPointerDown(PointerEventData eventData)
     {
         dragging = true;
-        mouseStartPos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 0));
-        objectStartPos = transform.position;
+        mouseStartPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        objectStartPos = transform.root.position;
     }
 
     public void OnPointerUp(PointerEventData eventData)

@@ -6,13 +6,12 @@ using TMPro;
 
 public class Dragon : MonoBehaviour
 {
-    public DragonInfo info;
+    public DragonInfo dragon;
     [SerializeField] private Button[] dragonButtons;
     [SerializeField] private Button[] statsButtons;
     [SerializeField] private TextMeshProUGUI[] statsPoint;
     [SerializeField] private GameObject statsTab;
     [SerializeField] private GameObject meat;
-    private SpriteRenderer dragon;
 
     [SerializeField] private TextMeshProUGUI nameUI;
     [SerializeField] private TextMeshProUGUI level;
@@ -26,11 +25,14 @@ public class Dragon : MonoBehaviour
 
     [SerializeField] private Transform equipmentParent;
     private Inventory inventory;
+    private GameObject graphics;
 
     void Start()
     {
-        dragon = GetComponent<SpriteRenderer>();
-        dragon.sprite = info.look;
+        if(dragon.isAdult)
+            graphics = Instantiate(dragon.prefabAdult, transform);
+        else
+            graphics = Instantiate(dragon.prefabBaby, transform);
         statsButtons[0].onClick.AddListener(delegate { AddStrength(); });
         statsButtons[1].onClick.AddListener(delegate { AddVitality(); });
         statsButtons[2].onClick.AddListener(delegate { AddLuck(); });
@@ -38,7 +40,6 @@ public class Dragon : MonoBehaviour
         dragonButtons[1].onClick.AddListener(delegate { StartExpedition(); });
         dragonButtons[2].onClick.AddListener(delegate { HideDragon(); });
         dragonButtons[3].onClick.AddListener(delegate { OpenArena(); });
-        dragon.enabled = true;
         inventory = Inventory.Instance;
         CheckEating();
 
@@ -49,17 +50,29 @@ public class Dragon : MonoBehaviour
 
     public void StartEating()
     {
-        info.canEat = false;
-        info.LvlUp();
-        info.Heal();
+        dragon.canEat = false;
+        if(!dragon.isAdult)
+        {
+            dragon.LvlUp();
+            if(dragon.isAdult)
+            {
+                Destroy(graphics);
+                graphics = Instantiate(dragon.prefabAdult, transform);
+            }
+        }
+        else
+        {
+            dragon.LvlUp();
+        }      
+        dragon.Heal();
         CheckAdult();
         RefreshDragonStats();
-        GameController.Instance.StartEating(info.eatingTime, info);
+        GameController.Instance.StartEating(dragon.eatingTime, dragon);
     }
 
     public void CheckEating()
     {
-        if(info.canEat)
+        if(dragon.canEat)
         {
             meat.GetComponent<SpriteRenderer>().enabled = true;
             meat.GetComponent<Collider2D>().enabled = true;
@@ -73,7 +86,7 @@ public class Dragon : MonoBehaviour
 
     void StartExpedition()
     {
-        GameController.Instance.ShowExpeditionPanel(gameObject, info);
+        GameController.Instance.ShowExpeditionPanel(dragon);
     }
 
     void OpenStats()
@@ -84,36 +97,35 @@ public class Dragon : MonoBehaviour
 
     void HideDragon()
     {
-        info.shown = false;
+        GameController.Instance.HideDragon();   
         GameController.Instance.RefreshDragonList();
-        Destroy(gameObject);
     }
 
     void AddStrength()
     {
-        info.AddStrength();
+        dragon.AddStrength();
         RefreshDragonStats();
     }
 
     void AddVitality()
     {
-        info.AddVitality();
+        dragon.AddVitality();
         RefreshDragonStats();
     }
 
     void AddLuck()
     {
-        info.AddLuck();
+        dragon.AddLuck();
         RefreshDragonStats();
     }
 
     void CheckPoints()
     {
-        statsPoint[0].text = info.stats[(int)StatType.Strength].GetValue().ToString();
-        statsPoint[1].text = info.stats[(int)StatType.Vitality].GetValue().ToString();
-        statsPoint[2].text = info.stats[(int)StatType.Luck].GetValue().ToString();
+        statsPoint[0].text = dragon.stats[(int)StatType.Strength].GetValue().ToString();
+        statsPoint[1].text = dragon.stats[(int)StatType.Vitality].GetValue().ToString();
+        statsPoint[2].text = dragon.stats[(int)StatType.Luck].GetValue().ToString();
 
-        if (info.remainPoints > 0)
+        if (dragon.remainPoints > 0)
         {
             foreach(Button b in statsButtons)
             {
@@ -131,10 +143,10 @@ public class Dragon : MonoBehaviour
 
     void RefreshDragonStats()
     {
-        nameUI.text = info.dragonName;
-        level.text = info.level.ToString();
-        damage.text = info.stats[(int)StatType.Damage].GetValue().ToString();
-        defense.text = info.stats[(int)StatType.Defense].GetValue().ToString();
+        nameUI.text = dragon.dragonName;
+        level.text = dragon.level.ToString();
+        damage.text = dragon.stats[(int)StatType.Damage].GetValue().ToString();
+        defense.text = dragon.stats[(int)StatType.Defense].GetValue().ToString();
         HealthBar();
         CheckPoints();
         CheckAdult();
@@ -143,10 +155,10 @@ public class Dragon : MonoBehaviour
 
     void RefreshDragonEquipment()
     {
-        for (int i = 0; i < info.equipment.Length; i++)
+        for (int i = 0; i < dragon.equipment.Length; i++)
         {
-            if(info.equipment[i] != null)
-                slots[i].FillSlot(info.equipment[i]);
+            if(dragon.equipment[i] != null)
+                slots[i].FillSlot(dragon.equipment[i]);
             else
                 slots[i].ClearSlot();
         }
@@ -154,13 +166,14 @@ public class Dragon : MonoBehaviour
 
     public void EquipItem(Equipment item, out Equipment previousItem)
     {
-        for (int i = 0; i < info.equipment.Length; i++)
+        for (int i = 0; i < dragon.equipment.Length; i++)
         {
             if (slots[i].equipmentType == item.equipmentType)
             {
                 previousItem = slots[i].item;
                 slots[i].item = item;
-                info.equipment[i] = item;
+                dragon.equipment[i] = item;
+                dragon.AddStats(item);
                 Debug.Log("Equipped Item: " + item.itemName);
                 return;
             }
@@ -168,14 +181,15 @@ public class Dragon : MonoBehaviour
         previousItem = null;
     }
 
-    public void UnequipItem(Item item)
+    public void UnequipItem(Equipment item)
     {
         for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i].item == item)
             {
                 slots[i].item = null;
-                info.equipment[i] = null;
+                dragon.equipment[i] = null;
+                dragon.RemoveStats(item);
                 Debug.Log("Unequipped Item: " + item.itemName);
             }
         }
@@ -184,7 +198,7 @@ public class Dragon : MonoBehaviour
     public bool Equip(Equipment item, InventorySlot slot)
     {
         Equipment previousItem;
-        if (item.lvlRequired <= info.level)
+        if (item.lvlRequired <= dragon.level)
         {
             Inventory.Instance.RemoveItem(item);
             EquipItem(item, out previousItem);
@@ -225,14 +239,14 @@ public class Dragon : MonoBehaviour
 
     void HealthBar()
     {
-        healthText.text = $"{info.currentHealth}/{info.maxHealth}";
-        float percentage = (float)info.currentHealth / info.maxHealth;
+        healthText.text = $"{dragon.currentHealth}/{dragon.maxHealth}";
+        float percentage = (float)dragon.currentHealth / dragon.maxHealth;
         healthBar.value = percentage;
     }
 
     public void CheckAdult()
     {
-        if(!info.isAdult || info.currentHealth <= 0)
+        if(!dragon.isAdult || dragon.currentHealth <= 0)
         {
             dragonButtons[3].interactable = false;
         }
@@ -244,6 +258,6 @@ public class Dragon : MonoBehaviour
 
     void OpenArena()
     {
-        GameController.Instance.ShowArena(gameObject);
+        GameController.Instance.ShowArena();
     }
 }

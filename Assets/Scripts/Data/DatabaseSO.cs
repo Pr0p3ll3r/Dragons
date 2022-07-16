@@ -11,11 +11,7 @@ public class DatabaseSO : ScriptableObject, ISerializationCallbackReceiver
     public Expedition[] expeditions;
 
     public void OnBeforeSerialize()
-    {     
-    }
-
-    public void OnAfterDeserialize()
-    {     
+    {
         for (int i = 0; i < items.Length; i++)
         {
             items[i].ID = i;
@@ -28,15 +24,11 @@ public class DatabaseSO : ScriptableObject, ISerializationCallbackReceiver
         {
             enemyDragons[i].ID = i;
         }
+    }
 
-        foreach (DragonInfo d in enemyDragons)
-        {
-            d.Initialize();
-        }
-        foreach (Expedition e in expeditions)
-        {
-            e.Initialize();
-        }
+    public void OnAfterDeserialize()
+    {     
+        
     }
 
     public int GetIdByName(string _name)

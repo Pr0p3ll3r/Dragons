@@ -7,37 +7,41 @@ using UnityEngine;
 public class Egg : MonoBehaviour
 {
     public DragonInfo newDragon;
-    [SerializeField] private SpriteRenderer look;
     [SerializeField] private GameObject timer;
     [SerializeField] private TextMeshProUGUI hatchingTimeText;
     [SerializeField] private GameObject fireButton;
     [SerializeField] private GameObject fireAnimation;
     [SerializeField] private GameObject namePanel;
-    [SerializeField] private TMP_InputField nameInput;
+    [SerializeField] private TMP_InputField nameInput;   
     private float hatchingTimer;
     private string dragonName;
+    private GameObject egg;
+    private Animator animator;
 
     void Start()
     {
         GetComponentInChildren<Canvas>().worldCamera = Camera.main;
         namePanel.SetActive(false);
         timer.SetActive(false);
-        
-        look.sprite = newDragon.eggLook;
 
         if (newDragon.toName)
         {
             namePanel.SetActive(true);
             fireButton.SetActive(false);
-            GetComponent<SpriteRenderer>().enabled = false;
         }
-
-        if(newDragon.hatching)
+        else if(newDragon.hatching)
         {
+            egg = Instantiate(newDragon.prefabEgg, transform);
+            animator = egg.GetComponent<Animator>();
             timer.SetActive(true);
             fireButton.SetActive(false);
             hatchingTimer = newDragon.remainingHatchingTime;
             StartCoroutine(Hatching(hatchingTimer));
+        }
+        else
+        {
+            egg = Instantiate(newDragon.prefabEgg, transform);
+            animator = egg.GetComponent<Animator>();
         }
     }
 
@@ -77,11 +81,15 @@ public class Egg : MonoBehaviour
 
     public void EndHatching()
     {
-        timer.SetActive(false);
-        GetComponent<SpriteRenderer>().enabled = false;
-        namePanel.SetActive(true);
-        newDragon.hatching = false;
-        newDragon.toName = true;
+        if (newDragon.toName)
+        {
+            timer.SetActive(false);
+            namePanel.SetActive(true);
+        }
+        if(egg != null)
+        {
+            animator.SetTrigger("Cracking");
+        }
     }
 
     public void SetName(string n)

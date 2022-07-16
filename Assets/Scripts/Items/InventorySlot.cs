@@ -8,6 +8,7 @@ public class InventorySlot : MonoBehaviour
 {
     [SerializeField] private Image icon;
     [SerializeField] private TextMeshProUGUI quantity;
+    [SerializeField] private GameObject buttonRemove;
 
     public Item item;
     public int amount;
@@ -23,6 +24,7 @@ public class InventorySlot : MonoBehaviour
         quantity.text = amount.ToString();
         icon.sprite = Database.database.items[item.ID].icon;
         icon.enabled = true;
+        buttonRemove.SetActive(true);
 
         if (amount <= 1) quantity.gameObject.SetActive(false);
         else quantity.gameObject.SetActive(true);
@@ -34,5 +36,6 @@ public class InventorySlot : MonoBehaviour
         quantity.text = "";
         icon.sprite = null;
         icon.enabled = false;
+        buttonRemove.SetActive(false);
     }
 }

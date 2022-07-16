@@ -23,10 +23,10 @@ public class ArenaDragon : MonoBehaviour
         dragonName.text = enemy.dragonName;
         level.text = enemy.level.ToString();
         health.text = enemy.maxHealth.ToString();
-        damage.text = enemy.stats[(int)StatType.Damage].ToString();
-        defense.text = enemy.stats[(int)StatType.Defense].ToString();
-        strength.text = enemy.stats[(int)StatType.Strength].ToString();
-        vitality.text = enemy.stats[(int)StatType.Vitality].ToString();
-        luck.text = enemy.stats[(int)StatType.Luck].ToString();
+        damage.text = enemy.stats[(int)StatType.Damage].GetValue().ToString();
+        defense.text = enemy.stats[(int)StatType.Defense].GetValue().ToString();
+        strength.text = enemy.stats[(int)StatType.Strength].GetValue().ToString();
+        vitality.text = enemy.stats[(int)StatType.Vitality].GetValue().ToString();
+        luck.text = enemy.stats[(int)StatType.Luck].GetValue().ToString();
     }
 }

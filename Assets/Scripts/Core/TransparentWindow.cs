@@ -67,6 +67,8 @@ public class TransparentWindow : MonoBehaviour
 
     private IntPtr hWnd = IntPtr.Zero;
 
+    public static TransparentWindow Instance { get; private set; }
+
     public bool IsMaximized()
     {
 #if !UNITY_EDITOR
@@ -116,8 +118,7 @@ public class TransparentWindow : MonoBehaviour
     Tray tray;
     private void Awake()
     {
-#if !UNITY_EDITOR
-        DontDestroyOnLoad(gameObject);
+#if !UNITY_EDITOR     
         tray = new Tray();
         tray.InitTray();
         tray.HideTray();
@@ -134,7 +135,7 @@ public class TransparentWindow : MonoBehaviour
         MARGINS margins = new MARGINS() { cxLeftWidth = -1 }; 
         DwmExtendFrameIntoClientArea(hWnd, ref margins);
         
-        SetWindowLong(hWnd, GWL_EXSTYLE, WS_EX_LAYERED | WS_EX_TRANSPARENT);
+        SetWindowLong(hWnd, GWL_EXSTYLE, WS_EX_LAYERED);
         SetLayeredWindowAttributes(hWnd, 0, 0, LWA_COLORKEY);
 
         SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, 0);
@@ -169,7 +170,7 @@ public class TransparentWindow : MonoBehaviour
 #endif
     }
 
-    public void MinimalizeToTray()
+    public void MinimizeToTray()
     {
 #if !UNITY_EDITOR
         ShowAsync(CmdShow.Hide);

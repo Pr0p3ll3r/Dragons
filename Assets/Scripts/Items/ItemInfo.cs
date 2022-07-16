@@ -25,7 +25,7 @@ public class ItemInfo : MonoBehaviour
             Equipment eq = (Equipment)item;
             Equipment currentEquipment = null;
             if (dragon != null)
-                currentEquipment = dragon.info.equipment[(int)eq.equipmentType];
+                currentEquipment = dragon.dragon.equipment[(int)eq.equipmentType];
             ItemStatInfo rarity = Instantiate(statPrefab, statParent).GetComponent<ItemStatInfo>();
             rarity.SetUp($"Rarity: {eq.rarity}");
             switch (eq.rarity)
@@ -50,7 +50,7 @@ public class ItemInfo : MonoBehaviour
             reqLvl.SetUp($"Lvl Required: {eq.lvlRequired}");
             if (dragon != null)
             {
-                if (dragon.info.level < eq.lvlRequired)
+                if (dragon.dragon.level < eq.lvlRequired)
                 {
                     reqLvl.SetColor(Color.red);
                 }

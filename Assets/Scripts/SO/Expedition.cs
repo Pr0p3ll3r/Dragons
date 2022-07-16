@@ -20,17 +20,25 @@ public class Expedition : ScriptableObject
         currentData = data[0];
     }
 
+    public void SetData()
+    {
+        if (level <= data.Length)
+            currentData = data[level - 1];
+        else
+            currentData = data[data.Length - 1];
+    }
+
     public void AddExp()
     {
-        if (level == data.Length && exp == level * 2)
+        if (level > data.Length && exp == level * 2)
             return;
 
         exp++;
-        if(exp >= level*2)
+        if (exp >= level * 2)
         {
             level++;
-            currentData = data[level - 1];
             exp = 0;
+            SetData();          
         }
     }
 }

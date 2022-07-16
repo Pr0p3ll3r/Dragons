@@ -8,28 +8,33 @@ public enum BattleState { START, PLAYERTURN, ENEMYTURN, WON, LOST, EMPTY }
 
 public class BattleSystem : MonoBehaviour
 {
-    public BattleState state;
+    [SerializeField] private BattleState state;
 
-    public TextMeshProUGUI stateText;
-    public TextMeshProUGUI battleText;
+    [SerializeField] private TextMeshProUGUI stateText;
+    [SerializeField] private TextMeshProUGUI battleText;
 
-    public BattleHUD playerHUD;
-    public BattleHUD enemyHUD;
+    [SerializeField] private BattleHUD playerHUD;
+    [SerializeField] private BattleHUD enemyHUD;
 
-    DragonInfo player;
-    DragonInfo enemy;
+    private DragonInfo player;
+    private DragonInfo enemy;
 
-    public GameObject battlePanel;
-    public GameObject mainPanel;
+    [SerializeField] private GameObject battlePanel;
+    [SerializeField] private GameObject mainPanel;
 
-    public GameObject reward;
-    public TextMeshProUGUI goldText;
-    public TextMeshProUGUI silverText;
-    public Button endButton;
+    [SerializeField] private GameObject reward;
+    [SerializeField] private TextMeshProUGUI goldText;
+    [SerializeField] private TextMeshProUGUI silverText;
+    [SerializeField] private Button endButton;
+    [SerializeField] private Button escapeButton;
+
+    private int playerSpecialSkill = 0;
+    private int enemySpecialSkill = 0;
 
     private void Start()
     {
         endButton.onClick.AddListener(delegate { CloseBattle(); });
+        escapeButton.onClick.AddListener(delegate { Escape(); });
     }
 
     public void SetupBattle(DragonInfo yourDragon, DragonInfo enemyDragon)
@@ -40,8 +45,10 @@ public class BattleSystem : MonoBehaviour
         mainPanel.SetActive(false);
         battleText.text = "";
         state = BattleState.START;
-        enemy = enemyDragon;
+        enemy = enemyDragon.GetCopy();
         player = yourDragon;
+        playerSpecialSkill = 0;
+        enemySpecialSkill = 0;
         playerHUD.SetHUD(player);
         enemyHUD.SetHUD(enemy);
         state = BattleState.PLAYERTURN;
@@ -57,11 +64,24 @@ public class BattleSystem : MonoBehaviour
         state = BattleState.EMPTY;
 
         int damage = player.stats[(int)StatType.Damage].GetValue();
+        if (playerSpecialSkill == 100)
+        {
+            damage *= 2;
+            playerSpecialSkill = 0;
+        }
+        else
+        {
+            playerSpecialSkill += player.stats[(int)StatType.Luck].GetValue();
+            playerSpecialSkill = Mathf.Clamp(playerSpecialSkill, 0, 100);
+        }
+        playerHUD.UpdateSkillBar(playerSpecialSkill);
+
         bool isDead = enemy.TakeDamage(damage);
         enemyHUD.UpdateHealthBar(enemy);
 
         battleText.color = Color.green;
         battleText.text = $"You dealt {damage} damage";
+        
 
         yield return new WaitForSeconds(1f);
 
@@ -84,6 +104,18 @@ public class BattleSystem : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         int enemyDamage = enemy.stats[(int)StatType.Damage].GetValue();
+        if (enemySpecialSkill == 100)
+        {
+            enemyDamage *= 2;
+            enemySpecialSkill = 0;
+        }
+        else
+        {
+            enemySpecialSkill += enemy.stats[(int)StatType.Luck].GetValue();
+            enemySpecialSkill = Mathf.Clamp(enemySpecialSkill, 0, 100);
+        }
+        enemyHUD.UpdateSkillBar(enemySpecialSkill);
+
         bool isDead = player.TakeDamage(enemyDamage);
         playerHUD.UpdateHealthBar(player);
 
@@ -104,7 +136,7 @@ public class BattleSystem : MonoBehaviour
         }
     }
 
-    public void OnEscapeButton()
+    private void Escape()
     {
         //if (state != BattleState.PLAYERTURN)
         //    return;
@@ -119,6 +151,7 @@ public class BattleSystem : MonoBehaviour
         {
             stateText.text = "YOU WON!";
             battleText.text = "";
+            escapeButton.gameObject.SetActive(false);
 
             yield return new WaitForSeconds(2f);
 
@@ -128,30 +161,25 @@ public class BattleSystem : MonoBehaviour
         {
             stateText.text = "YOU LOST";
             battleText.text = "";
+            escapeButton.gameObject.SetActive(false);
 
             yield return new WaitForSeconds(2f);
 
-            ShowEndButton();
+            endButton.gameObject.SetActive(true);
         }
         else
-        {
-            enemy.Heal();
+        {          
             CloseBattle();
+            StopAllCoroutines();
         }
     }
 
     void Rewards()
     {
-        enemy.Heal();
         goldText.text = enemy.rewardGold.ToString();
         silverText.text = enemy.rewardSilver.ToString();
 
         reward.SetActive(true);
-        ShowEndButton();
-    }
-
-    void ShowEndButton()
-    {
         endButton.gameObject.SetActive(true);
     }
 
@@ -161,4 +189,3 @@ public class BattleSystem : MonoBehaviour
         mainPanel.SetActive(true);
     }
 }
-

@@ -45,6 +45,6 @@ public class ItemStat
 	}
 	public void GenerateValue()
 	{
-		value = Random.Range(min, max);
+		value = Random.Range(min, max + 1);
 	}
 }

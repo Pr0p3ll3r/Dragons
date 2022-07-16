@@ -8,6 +8,9 @@ public class DragonInfo : ScriptableObject
 {
     public int ID;
     public string dragonName = "";
+    public GameObject prefabBaby;
+    public GameObject prefabAdult;
+    public GameObject prefabEgg;
     public Sprite look;
     public Sprite eggLook;
     public float hatchingTime;
@@ -23,7 +26,6 @@ public class DragonInfo : ScriptableObject
     public bool loot;
     public bool canEat;
     public int index = -1;
-    public int specialSkill = 0;
 
     [Header("Stats")]
     public int maxHealth = 100;
@@ -49,17 +51,19 @@ public class DragonInfo : ScriptableObject
 
     public void Initialize()
     {
+        stats[0] = new Stat(stats[0].GetValue(), StatType.Damage);
+        stats[1] = new Stat(stats[1].GetValue(), StatType.Defense);
+        stats[2] = new Stat(stats[2].GetValue(), StatType.Strength);
+        stats[3] = new Stat(stats[3].GetValue(), StatType.Vitality);
+        stats[4] = new Stat(stats[4].GetValue(), StatType.Luck);
+    }
+
+    public void LoadEquipment()
+    {
         for (int i = 0; i < equipment.Length; i++)
         {
             if (equipment[i] == null) continue;
-            for (int j = 0; j < equipment[i].stats.Length; j++)
-            {
-                for (int k = 0; k < stats.Length; k++)
-                {
-                    if (equipment[i].stats[j].statType == stats[k].statType)
-                        stats[k].AddModifier(equipment[i].stats[j].value);
-                }            
-            }
+            AddStats(equipment[i]);
         }
     }
         
@@ -90,28 +94,32 @@ public class DragonInfo : ScriptableObject
         remainPoints--;
     }
 
-    public void AddEquipment(Equipment item, int numSlot)
+    public void AddStats(Equipment item)
     {
-        equipment[numSlot] = item;
         foreach (ItemStat itemStat in item.stats)
         {
             foreach (Stat stat in stats)
             {
                 if (itemStat.statType == stat.statType)
+                {
                     stat.AddModifier(itemStat.value);
+                    break;
+                }                  
             }
         }
     }
 
-    public void RemoveEquipment(Equipment item, int numSlot)
+    public void RemoveStats(Equipment item)
     {
-        equipment[numSlot] = null;
         foreach (ItemStat itemStat in item.stats)
         {
             foreach (Stat stat in stats)
             {
                 if (itemStat.statType == stat.statType)
+                {
                     stat.RemoveModifier(itemStat.value);
+                    break;
+                }                  
             }
         }
     }

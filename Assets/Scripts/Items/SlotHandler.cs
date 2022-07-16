@@ -31,10 +31,9 @@ public class SlotHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         Inventory.Instance.DestroyItemInfo();
         mouseObject = new GameObject();
         RectTransform rt = mouseObject.AddComponent<RectTransform>();
-        rt.localScale = new Vector2(75, 75);
+        rt.sizeDelta = new Vector2(0.8f, 0.8f);
         mouseObject.transform.SetParent(transform.parent);
         Image image = mouseObject.AddComponent<Image>();
-        image.preserveAspect = true;
         image.raycastTarget = false;
         if (invSlot != null)
         {
@@ -54,7 +53,7 @@ public class SlotHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     {
         if (mouseObject)
         {
-            mouseObject.transform.position = Input.mousePosition;
+            mouseObject.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 1f));
         }
     }
 
@@ -144,7 +143,7 @@ public class SlotHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         {
             if (inventory)
             {
-                if (invSlot.item.itemType == ItemType.Equipment)
+                if (invSlot.item.itemType == ItemType.Equipment && gameController.currentDragon != null)
                 {
                     Equipment eq = (Equipment)invSlot.item;
                     gameController.currentDragon.Equip(eq, invSlot);

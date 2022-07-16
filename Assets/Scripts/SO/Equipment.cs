@@ -5,10 +5,10 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Equipment", menuName = "Items/Equipment")]
 public class Equipment : Item
 {
+    public int lvlRequired = 1;
     public EquipmentType equipmentType;
     public EquipmentRarity rarity;
     public ItemStat[] stats;
-    public int lvlRequired = 1;
 
     public override Item GetCopy()
     {

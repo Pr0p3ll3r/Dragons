@@ -7,10 +7,13 @@ using UnityEngine.UI;
 using System.IO;
 using System;
 using System.Net;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
     public static GameController Instance;
+
+    public static string profileID = "Profile0";
 
     private void Awake()
     {
@@ -18,10 +21,21 @@ public class GameController : MonoBehaviour
         Application.targetFrameRate = Screen.currentResolution.refreshRate;
         Instance = this;
         Database.database = database;
+        foreach (DragonInfo d in Database.database.enemyDragons)
+        {
+            d.Initialize();
+            d.LoadEquipment();
+        }
+        foreach (Expedition e in Database.database.expeditions)
+        {
+            e.Initialize();
+        }
     }
 
     [SerializeField] private Button[] mainButtons;
     [SerializeField] private Transform canvas;
+    [SerializeField] private GameObject newGameButtonClose;
+    [SerializeField] private GameObject quitMenu;
 
     [SerializeField] private GameObject eggPrefab;
     [SerializeField] private GameObject dragonPrefab;
@@ -56,57 +70,55 @@ public class GameController : MonoBehaviour
     private Egg currentEgg;
     private GameObject currentExpeditionInfo;
     private int nextIndex = 0;
-    private bool shown = false;
     private Inventory inventory;
     private List<Coroutine> coroutines = new List<Coroutine>();
 
-    void Start()
+    private void Start()
     {
-        if (Data.NewGame())
+        if (Data.NewGame(profileID))
         {
-            PlayerPrefs.SetInt("NewGame", 1);
             BasicsDragonsPanel();
-
+            newGameButtonClose.gameObject.SetActive(false);
             mainButtons[0].transform.parent.gameObject.SetActive(false);
         }
         else
         {
-            Data.Load();
+            Data.Load(profileID);
             mainButtons[0].transform.parent.gameObject.SetActive(true);
             eggsPanel.SetActive(false);
         }
         CreateDragonList();
         RefreshDragonList();
         LoadCoroutines();
+        quitMenu.SetActive(false);
         arenaPanel.SetActive(false);
         inventoryPanel.SetActive(false);
         expeditionPanel.SetActive(false);
         CreateExpeditionList();
         mainButtons[0].onClick.AddListener(delegate { ShowDragonList(); });
         mainButtons[1].onClick.AddListener(delegate { ShowInventory(); });
+        mainButtons[2].onClick.AddListener(delegate { ShowQuitMenu(); });
         inventory = Inventory.Instance;
     }
 
     public void AddDragon(DragonInfo basicDragon)
     {
         DragonInfo newDragon = basicDragon.GetCopy();
-
+        newDragon.Initialize();
         newDragon.shown = true;
         newDragon.index = nextIndex;
         myDragons[nextIndex] = newDragon;
         nextIndex++;
         HideDragon();
         mainButtons[0].transform.parent.gameObject.SetActive(true);
-        GameObject newEgg = Instantiate(eggPrefab);
-        newEgg.GetComponent<Egg>().newDragon = newDragon;   
+        Egg newEgg = Instantiate(eggPrefab).GetComponent<Egg>();
+        newEgg.newDragon = newDragon;
+        currentEgg = newEgg;
         GameObject dragonUI = Instantiate(dragonListPrefab, dragonList);
-        dragonUI.transform.Find("Look").GetComponent<Image>().sprite = newDragon.look;
         dragonUI.GetComponent<Button>().onClick.AddListener(delegate { ShowDragon(newDragon); });
-        //RefreshDragonList();
-        Invoke("RefreshDragonList", 0.11f);
     }
 
-    void ShowDragonList()
+    private void ShowDragonList()
     {
         RefreshDragonList();
         dragonList.gameObject.SetActive(!dragonList.gameObject.activeSelf);
@@ -118,44 +130,7 @@ public class GameController : MonoBehaviour
         {
             if (myDragons[i] == null) continue;
 
-            if(myDragons[i].shown)
-            {
-                dragonList.GetChild(i).GetComponent<Button>().interactable = false;
-            }
-            else
-            {
-                dragonList.GetChild(i).GetComponent<Button>().interactable = true;
-            }
-
-            if (!myDragons[i].hatching && myDragons[i].isEgg)
-            {
-                dragonList.GetChild(i).Find("Look").gameObject.SetActive(true);
-                dragonList.GetChild(i).Find("Timer").gameObject.SetActive(false);
-            }
-            else if (myDragons[i].hatching && myDragons[i].isEgg)
-            {
-                dragonList.GetChild(i).Find("Look").gameObject.SetActive(false);
-                dragonList.GetChild(i).Find("Timer").gameObject.SetActive(true);
-            }
-            else if (myDragons[i].onExpedition)
-            {
-                dragonList.GetChild(i).Find("Look").gameObject.SetActive(false);
-                dragonList.GetChild(i).Find("Timer").gameObject.SetActive(true);
-                dragonList.GetChild(i).GetComponent<Button>().interactable = false;
-            }
-            else if (myDragons[i].loot)
-            {
-                dragonList.GetChild(i).Find("Look").gameObject.SetActive(false);
-                dragonList.GetChild(i).Find("Timer").gameObject.SetActive(true);
-                dragonList.GetChild(i).GetComponent<Button>().interactable = true;
-                dragonList.GetChild(i).Find("Timer").gameObject.GetComponent<Animation>().Play("Flash");
-            }
-            else
-            {
-                dragonList.GetChild(i).Find("Look").gameObject.SetActive(true);
-                dragonList.GetChild(i).Find("Timer").gameObject.SetActive(false);
-                dragonList.GetChild(i).Find("Timer").gameObject.GetComponent<Animation>().Play("Idle");
-            }
+            dragonList.GetChild(myDragons[i].index).GetComponent<DragonUI>().SetUp(myDragons[i]);
         }
 
         if(dragonList.childCount < myDragons.Length && dragonList.childCount < nextIndex + 1)
@@ -165,7 +140,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    void CreateDragonList()
+    private void CreateDragonList()
     {
         for (int i = 0; i < myDragons.Length; i++)
         {
@@ -181,21 +156,13 @@ public class GameController : MonoBehaviour
             if (dragon == null) continue;
 
             GameObject dragonUI = Instantiate(dragonListPrefab, dragonList);
-            if(dragon.isEgg)
-                dragonUI.transform.GetChild(0).GetComponent<Image>().sprite = Database.database.dragons[dragon.ID].eggLook;
-            else
-                dragonUI.transform.GetChild(0).GetComponent<Image>().sprite = Database.database.dragons[dragon.ID].look;
             dragonUI.GetComponent<Button>().onClick.AddListener(delegate { ShowDragon(dragon); });
         }
-        RefreshDragonList();
     }
 
-    void ShowDragon(DragonInfo info)
+    private void ShowDragon(DragonInfo info)
     {
-        if(shown)
-        {
-            HideDragon();
-        }
+        HideDragon();
 
         if (info.isEgg)
         {
@@ -216,35 +183,34 @@ public class GameController : MonoBehaviour
                 GameObject dragonGO = Instantiate(dragonPrefab);
                 Dragon dragon = dragonGO.GetComponent<Dragon>();
                 currentDragon = dragon;
-                dragon.info = info;
-                dragon.info.shown = true;
+                dragon.dragon = info;
+                dragon.dragon.shown = true;
             }
         }
 
-        shown = true;
-        RefreshDragonList();
+        dragonList.gameObject.SetActive(false);
     }
 
-    public void ShowExpeditionPanel(GameObject dragonGO, DragonInfo info)
+    public void ShowExpeditionPanel(DragonInfo info)
     {
-        RefreshExpeditionList(dragonGO, info);
+        RefreshExpeditionList(info);
+        quitMenu.SetActive(false);
+        inventoryPanel.SetActive(false);
         expeditionList.gameObject.SetActive(true);
-        expeditionPanel.SetActive(true);
+        expeditionPanel.SetActive(!expeditionPanel.activeSelf);
         if (currentExpeditionInfo != null)
             Destroy(currentExpeditionInfo);
     }
 
-    private void ShowExpeditionInfo(Expedition expedition, GameObject dragonGO, DragonInfo info)
+    private void BackToExpeditionList(DragonInfo info)
     {
-        expeditionList.gameObject.SetActive(false);
-        currentExpeditionInfo = Instantiate(expeditionInfoPrefab, expeditionList.parent);
-        int level = expedition.level-1;
-        currentExpeditionInfo.transform.GetComponent<ExpeditionInfo>().SetUp(expedition);
-        currentExpeditionInfo.transform.Find("ButtonStart").GetComponent<Button>().onClick.AddListener(delegate { StartExpedition(expedition.data[level].expeditionTime, dragonGO, expedition, info); });
-        currentExpeditionInfo.transform.Find("ButtonCancel").GetComponent<Button>().onClick.AddListener(delegate { ShowExpeditionPanel(dragonGO, info); });
+        RefreshExpeditionList(info);
+        expeditionList.gameObject.SetActive(true);
+        if (currentExpeditionInfo != null)
+            Destroy(currentExpeditionInfo);
     }
 
-    private void RefreshExpeditionList(GameObject dragonGO, DragonInfo info)
+    private void RefreshExpeditionList(DragonInfo info)
     {
         for (int i = 0; i < expeditionList.childCount; i++)
         {
@@ -254,8 +220,18 @@ public class GameController : MonoBehaviour
             expeditionList.transform.GetChild(i).Find("ExpBar").GetComponent<Slider>().value = percentage;
             expeditionList.transform.GetChild(i).Find("ExpBar/Text").GetComponent<TextMeshProUGUI>().text = $"Lvl: {e.level} ({e.exp}/{e.level * 2})";
             int index = i;
-            expeditionList.transform.GetChild(i).GetComponent<Button>().onClick.AddListener(delegate { ShowExpeditionInfo(e, dragonGO, info); });
+            expeditionList.transform.GetChild(i).GetComponent<Button>().onClick.AddListener(delegate { ShowExpeditionInfo(e, info); });
         }
+    }
+
+    private void ShowExpeditionInfo(Expedition expedition, DragonInfo info)
+    {
+        expeditionList.gameObject.SetActive(false);
+        currentExpeditionInfo = Instantiate(expeditionInfoPrefab, expeditionList.parent);
+        int level = expedition.level-1;
+        currentExpeditionInfo.transform.GetComponent<ExpeditionInfo>().SetUp(expedition);
+        currentExpeditionInfo.transform.Find("ButtonStart").GetComponent<Button>().onClick.AddListener(delegate { StartExpedition(expedition.data[level].expeditionTime, expedition, info); });
+        currentExpeditionInfo.transform.Find("ButtonCancel").GetComponent<Button>().onClick.AddListener(delegate { BackToExpeditionList(info); });
     }
 
     private void CreateExpeditionList()
@@ -277,7 +253,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    private void StartExpedition(float time, GameObject dragonGO, Expedition e, DragonInfo info)
+    private void StartExpedition(float time, Expedition e, DragonInfo info)
     {
         dragonList.GetChild(info.index).GetComponent<DragonUI>().RefreshTimerExpedition(time);
         info.onExpedition = true;
@@ -287,8 +263,8 @@ public class GameController : MonoBehaviour
         expeditionPanel.SetActive(false);
         RefreshDragonList();
         info.shown = false;
-        e.AddExp();
-        if (dragonGO != null) Destroy(dragonGO);
+        if (currentDragon != null) 
+            Destroy(currentDragon.gameObject);
     }
 
     private IEnumerator Expedition(float time, int indexCoro, int indexDragon, Expedition e)
@@ -340,6 +316,7 @@ public class GameController : MonoBehaviour
             Inventory.Instance.AddResource(resource.name, resource.amount);
         }
         info.loot = false;
+        expedition.AddExp();
         GameObject loot = Instantiate(expeditionLootPrefab, canvas);
         loot.GetComponent<ExpeditionInfo>().SetUp(expedition, items, resources);
         RefreshDragonList();
@@ -364,10 +341,8 @@ public class GameController : MonoBehaviour
             coroutines[indexCoro] = null;
             myDragons[indexDragon].canEat = true;
             myDragons[indexDragon].remainingEatingTime = time;
-            foreach (Dragon d in FindObjectsOfType<Dragon>())
-            {
-                d.CheckEating();
-            }
+            if (currentDragon != null)
+                currentDragon.CheckEating();
         }
         else
         {
@@ -381,30 +356,36 @@ public class GameController : MonoBehaviour
         inventoryPanel.SetActive(!inventoryPanel.activeSelf);
     }
 
-    public void ShowArena(GameObject dragonGO)
+    private void ShowQuitMenu()
     {
-        RefreshArenaList(dragonGO);
+        quitMenu.SetActive(!quitMenu.activeSelf);
+    }
+
+    public void ShowArena()
+    {
+        RefreshArenaList();
+        quitMenu.SetActive(false);
+        inventoryPanel.SetActive(false);
         arenaPanel.SetActive(true);
     }
 
-    private void RefreshArenaList(GameObject dragonGO)
+    private void RefreshArenaList()
     {
-        DragonInfo info = dragonGO.GetComponent<Dragon>().info;
+        DragonInfo info = currentDragon.GetComponent<Dragon>().dragon;
 
         for (int i = 0; i < arenaList.childCount; i++)
         {
             arenaList.GetChild(i).GetComponent<ArenaDragon>().SetUp(i);
             int index = i;
-            arenaList.GetChild(i).GetComponent<Button>().onClick.AddListener(delegate { StartBattle(info, Database.database.enemyDragons[index], dragonGO); });
+            arenaList.GetChild(i).GetComponent<Button>().onClick.AddListener(delegate { StartBattle(info, Database.database.enemyDragons[index]); });
         }
     }
 
-    void StartBattle(DragonInfo myDragon, DragonInfo enemyDragon, GameObject dragonGO)
+    private void StartBattle(DragonInfo myDragon, DragonInfo enemyDragon)
     {
         GetComponent<BattleSystem>().SetupBattle(myDragon, enemyDragon);
         arenaPanel.SetActive(false);
         myDragon.shown = false;
-        Destroy(dragonGO);
     }
 
     public void StartHatching(float time, DragonInfo newDragon)
@@ -429,10 +410,8 @@ public class GameController : MonoBehaviour
             myDragons[indexDragon].hatching = false;
             myDragons[indexDragon].toName = true;
             myDragons[indexDragon].remainingHatchingTime = 0;
-            foreach (Egg e in FindObjectsOfType<Egg>())
-            {
-                e.EndHatching();
-            }
+            if(currentEgg != null)
+                currentEgg.EndHatching();
             RefreshDragonList();
         }
         else
@@ -443,7 +422,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    void EggPanel()
+    private void EggPanel()
     {
         eggsPanel.SetActive(true);
         warningBlueprintsText.SetActive(false);
@@ -502,6 +481,7 @@ public class GameController : MonoBehaviour
     {
         Destroy(dragonList.GetChild(nextIndex).gameObject);
         AddDragon(info);
+        dragonList.gameObject.SetActive(false);
         eggsPanel.SetActive(false);
     }
 
@@ -513,7 +493,6 @@ public class GameController : MonoBehaviour
         }
 
         Destroy(dragonList.GetChild(nextIndex).gameObject);
-        info.shown = true;
         AddDragon(info);  
         eggsPanel.SetActive(false);
         inventory.RemoveItem(blueprint);
@@ -521,10 +500,10 @@ public class GameController : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        Data.Save(myDragons, Inventory.Instance);
+        Data.Save(myDragons, Inventory.Instance, profileID);
     }
 
-    void LoadCoroutines()
+    private void LoadCoroutines()
     {
         float passedTime = Data.PassedTime();
         //Debug.Log("Passed Time: " + passedTime);
@@ -562,7 +541,7 @@ public class GameController : MonoBehaviour
                 }
                 else
                 {
-                    StartExpedition(remainingTime, null, Database.database.expeditions[d.currentExpedition], d);
+                    StartExpedition(remainingTime, Database.database.expeditions[d.currentExpedition], d);
                 }         
             }
 
@@ -582,10 +561,9 @@ public class GameController : MonoBehaviour
                 }       
             }
         }
-        RefreshDragonList();
     }
 
-    private void HideDragon()
+    public void HideDragon()
     {
         if(currentEgg != null)
         {
@@ -594,9 +572,11 @@ public class GameController : MonoBehaviour
         }
         if(currentDragon != null)
         {
-            currentDragon.info.shown = false;
+            currentDragon.dragon.shown = false;
             Destroy(currentDragon.gameObject);
         }
+        expeditionPanel.SetActive(false);
+        arenaPanel.SetActive(false);
     }
 
     public void ShowText(string text, Color color)
@@ -605,5 +585,16 @@ public class GameController : MonoBehaviour
         warningText.color = color;
         warningText.GetComponent<Animation>().Stop();
         warningText.GetComponent<Animation>().Play();
+    }
+
+    public void BackToMenu()
+    {
+        SceneManager.LoadScene(0);
+        Data.Save(Instance.myDragons, Inventory.Instance, profileID);
+    }
+
+    public void QuitGame()
+    {
+        Application.Quit();
     }
 }

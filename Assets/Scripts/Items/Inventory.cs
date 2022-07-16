@@ -37,7 +37,7 @@ public class Inventory : MonoBehaviour
     private void Start()
     {
         RefreshUI();
-        if(Data.NewGame())
+        if(Data.NewGame(GameController.profileID))
         {
             for (int i = 0; i < startingItems.Length; i++)
             {
@@ -197,16 +197,6 @@ public class Inventory : MonoBehaviour
     {
         resources.data[GetIdByName(name)].amount += _amount;
         RefreshUI();
-    }
-
-    public bool CheckGold(int neededGold)
-    {
-        if (resources.data[GetIdByName("Gold")].amount >= neededGold)
-        {
-            resources.data[GetIdByName("Gold")].amount -= neededGold;
-            return true;
-        }
-        else return false;
     }
 
     public bool CheckMaterials(Blueprint b)

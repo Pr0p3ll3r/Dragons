@@ -3,20 +3,30 @@ using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Net;
 using System.Globalization;
+using System.Net;
+using System.Net.Sockets;
 
 public static class Data
 {
-    private static string inventoryPath = Application.dataPath + "/inventory.txt";
-    private static string dragonsPath = Application.dataPath + "/dragons.txt";
-    private static string expeditionsPath = Application.dataPath + "/expeditions.txt";
-
-    public static void Save(DragonInfo[] myDragons, Inventory inventory)
+    public static void Save(DragonInfo[] myDragons, Inventory inventory, string profileID)
     {
+        //Save if first dragon was chosen
+        if (!StartedGame(myDragons, profileID))
+            return;
+        PlayerPrefs.SetInt("StartedGame" + profileID, 1);
+
+        string inventoryPath = Path.Combine(Application.persistentDataPath, profileID, "inventory.txt");
+        string dragonsPath = Path.Combine(Application.persistentDataPath, profileID, "dragons.txt");
+        string expeditionsPath = Path.Combine(Application.persistentDataPath, profileID, "expeditions.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(inventoryPath));
+        Directory.CreateDirectory(Path.GetDirectoryName(dragonsPath));
+        Directory.CreateDirectory(Path.GetDirectoryName(expeditionsPath));
+
         string data;
         BinaryFormatter bf = new BinaryFormatter();
         FileStream file;
+        
         file = File.Create(dragonsPath);
         for (int i = 0; i < myDragons.Length; i++)
         {
@@ -69,11 +79,14 @@ public static class Data
         file.Close();
 
         //Save current time
-        PlayerPrefs.SetString("offlineTime", GetNetTime().ToBinary().ToString());
+        PlayerPrefs.SetString("offlineTime" + profileID, GetNetTime().ToBinary().ToString());
     }
 
-    public static void Load()
+    public static void Load(string profileID)
     {
+        string inventoryPath = Path.Combine(Application.persistentDataPath, profileID, "inventory.txt");
+        string dragonsPath = Path.Combine(Application.persistentDataPath, profileID, "dragons.txt");
+        string expeditionsPath = Path.Combine(Application.persistentDataPath, profileID, "expeditions.txt");
         BinaryFormatter bf = new BinaryFormatter();
         FileStream file;
         if (File.Exists(dragonsPath))
@@ -88,6 +101,9 @@ public static class Data
                 {
                     GameController.Instance.myDragons[i] = newDragon;
                     newDragon.shown = false;
+                    newDragon.prefabEgg = Database.database.dragons[newDragon.ID].prefabEgg;
+                    newDragon.prefabBaby = Database.database.dragons[newDragon.ID].prefabBaby;
+                    newDragon.prefabAdult = Database.database.dragons[newDragon.ID].prefabAdult;
                     newDragon.look = Database.database.dragons[newDragon.ID].look;
                     newDragon.eggLook = Database.database.dragons[newDragon.ID].eggLook;
 
@@ -105,6 +121,9 @@ public static class Data
                             dragons[i].equipment[j].stats = saveItem.stats;
                         }
                     }
+
+                    newDragon.Initialize();
+                    dragons[i].LoadEquipment();
                 }
                 else
                 {
@@ -147,21 +166,35 @@ public static class Data
                 JsonUtility.FromJsonOverwrite(bf.Deserialize(file).ToString(), saveExpedition);
                 e.level = saveExpedition.level;
                 e.exp = saveExpedition.exp;
-                e.currentData = e.data[e.level - 1];
+                e.SetData();
             }
             file.Close();
         }
     }
 
+    public static void DeleteSave(string profileID)
+    {
+        string path = Path.Combine(Application.persistentDataPath, profileID);
+        Directory.Delete(Path.Combine(path), true);
+    }
+
     public static DateTime GetNetTime()
     {
-        var myHttpWebRequest = (HttpWebRequest)WebRequest.Create("http://www.google.com");
-        var response = myHttpWebRequest.GetResponse();
-        string todaysDates = response.Headers["date"];
-        return DateTime.ParseExact(todaysDates,
-        "ddd, dd MMM yyyy HH:mm:ss 'GMT'",
-        CultureInfo.InvariantCulture.DateTimeFormat,
-        DateTimeStyles.AssumeUniversal);
+        var client = new TcpClient("time.nist.gov", 13);
+        var localDateTime = DateTime.UtcNow;
+        using (var streamReader = new StreamReader(client.GetStream()))
+        {
+            try
+            {
+                var response = streamReader.ReadToEnd();
+                var utcDateTimeString = response.Substring(7, 17);
+                localDateTime = DateTime.ParseExact(utcDateTimeString, "yy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+            }
+            catch
+            {
+            }
+        }
+        return localDateTime;
     }
 
     public static float PassedTime()
@@ -177,26 +210,22 @@ public static class Data
         return passedTime;
     }
 
-    public static bool NewGame()
+    public static bool NewGame(string profileID)
     {
+        string dragonsPath = Path.Combine(Application.persistentDataPath, profileID, "dragons.txt");
         if (File.Exists(dragonsPath))
             return false;
         else return true;
     }
 
-    public static int GetIdByName(string _name, object[] array)
+    public static bool StartedGame(DragonInfo[] dragons, string profileID)
     {
-        Resource[] resources;
-        if (array.GetType() == typeof(Resource))
-        {
-            resources = (Resource[])array;
-            for (int i = 0; i < resources.Length; i++)
-            {
-                if (resources[i].name == _name)
-                    return i;
-            }
-        }
-            
-        return -1;
+        if (PlayerPrefs.GetInt("StartedGame" + profileID, 0) == 1)
+            return true;
+
+        if (dragons[0] == null)
+            return false;
+
+        return true;
     }
 }
