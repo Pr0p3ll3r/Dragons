@@ -29,6 +29,9 @@ public class DragonUI : MonoBehaviour
 
     public void RefreshTimer(string text, float time)
     {
+        if (dragon == null)
+            return;
+
         if (dragon.onExpedition || dragon.loot)
             return;
 

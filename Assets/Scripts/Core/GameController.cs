@@ -668,4 +668,9 @@ public class GameController : MonoBehaviour
     {
         Application.Quit();
     }
+
+    public void MinimizeToTray()
+    {
+        TransparentWindow.Instance.MinimizeToTray();
+    }
 }

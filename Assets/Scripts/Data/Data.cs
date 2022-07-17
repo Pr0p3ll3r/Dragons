@@ -131,6 +131,7 @@ public static class Data
                     continue;
                 }
             }
+            file.Close();
         }
 
         if (File.Exists(inventoryPath))
