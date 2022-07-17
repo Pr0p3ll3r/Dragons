@@ -104,7 +104,8 @@ public static class Data
                     newDragon.prefabEgg = Database.database.dragons[newDragon.ID].prefabEgg;
                     newDragon.prefabBaby = Database.database.dragons[newDragon.ID].prefabBaby;
                     newDragon.prefabAdult = Database.database.dragons[newDragon.ID].prefabAdult;
-                    newDragon.look = Database.database.dragons[newDragon.ID].look;
+                    newDragon.lookBaby = Database.database.dragons[newDragon.ID].lookBaby;
+                    newDragon.lookAdult = Database.database.dragons[newDragon.ID].lookAdult;
                     newDragon.eggLook = Database.database.dragons[newDragon.ID].eggLook;
 
                     for (int j = 0; j < dragons[i].equipment.Length; j++)
@@ -127,7 +128,7 @@ public static class Data
                 }
                 else
                 {
-                    break;
+                    continue;
                 }
             }
         }

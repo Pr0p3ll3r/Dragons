@@ -61,6 +61,9 @@ public class GameController : MonoBehaviour
     [SerializeField] private GameObject arenaPanel;
     [SerializeField] private Transform arenaList;
 
+    [SerializeField] private GameObject releasePanel;
+    [SerializeField] private Button releaseButton;
+
     [SerializeField] private TextMeshProUGUI warningText;
     [SerializeField] private DatabaseSO database;
 
@@ -72,6 +75,7 @@ public class GameController : MonoBehaviour
     private int nextIndex = 0;
     private Inventory inventory;
     private List<Coroutine> coroutines = new List<Coroutine>();
+    private GameObject newDragonUI;
 
     private void Start()
     {
@@ -88,8 +92,8 @@ public class GameController : MonoBehaviour
             eggsPanel.SetActive(false);
         }
         CreateDragonList();
-        RefreshDragonList();
         LoadCoroutines();
+        releasePanel.SetActive(false);
         quitMenu.SetActive(false);
         arenaPanel.SetActive(false);
         inventoryPanel.SetActive(false);
@@ -108,14 +112,16 @@ public class GameController : MonoBehaviour
         newDragon.shown = true;
         newDragon.index = nextIndex;
         myDragons[nextIndex] = newDragon;
-        nextIndex++;
+        GetNextIndex();
         HideDragon();
         mainButtons[0].transform.parent.gameObject.SetActive(true);
         Egg newEgg = Instantiate(eggPrefab).GetComponent<Egg>();
         newEgg.newDragon = newDragon;
         currentEgg = newEgg;
+        newDragon.indexUI = dragonList.childCount - 1;
         GameObject dragonUI = Instantiate(dragonListPrefab, dragonList);
         dragonUI.GetComponent<Button>().onClick.AddListener(delegate { ShowDragon(newDragon); });
+        dragonUI.transform.Find("ButtonRemove").GetComponent<Button>().onClick.AddListener(delegate { ShowReleaseDragonPanel(newDragon); });
     }
 
     private void ShowDragonList()
@@ -124,24 +130,51 @@ public class GameController : MonoBehaviour
         dragonList.gameObject.SetActive(!dragonList.gameObject.activeSelf);
     }
 
-    public void RefreshDragonList()
-    {         
+    private void CreateDragonList()
+    {
         for (int i = 0; i < myDragons.Length; i++)
         {
-            if (myDragons[i] == null) continue;
+            if (myDragons[i] == null)
+                continue;
 
-            dragonList.GetChild(myDragons[i].index).GetComponent<DragonUI>().SetUp(myDragons[i]);
+            DragonInfo dragon = myDragons[i];
+            GameObject dragonUI = Instantiate(dragonListPrefab, dragonList);
+            dragonUI.GetComponent<DragonUI>().SetUp(myDragons[i]);
+            dragonUI.GetComponent<Button>().onClick.AddListener(delegate { ShowDragon(dragon); });
+            dragonUI.transform.Find("ButtonRemove").GetComponent<Button>().onClick.AddListener(delegate { ShowReleaseDragonPanel(dragon); });
         }
 
-        if(dragonList.childCount < myDragons.Length && dragonList.childCount < nextIndex + 1)
+        GetNextIndex();
+
+        if (dragonList.childCount < myDragons.Length)
         {
-            GameObject dragonUI = Instantiate(newDragonListPrefab, dragonList);
-            dragonUI.GetComponent<Button>().onClick.AddListener(delegate { EggPanel(); });
+            newDragonUI = Instantiate(newDragonListPrefab, dragonList);
+            newDragonUI.GetComponent<Button>().onClick.AddListener(delegate { EggPanel(); });
         }
     }
 
-    private void CreateDragonList()
+    public void RefreshDragonList()
     {
+        GetNextIndex();
+
+        for (int i = 0; i < myDragons.Length; i++)
+        {
+            if (myDragons[i] == null)
+                continue;
+
+            dragonList.GetChild(myDragons[i].indexUI).GetComponent<DragonUI>().SetUp(myDragons[i]);
+        }
+
+        if (dragonList.childCount < myDragons.Length && newDragonUI == null)
+        {
+            newDragonUI = Instantiate(newDragonListPrefab, dragonList);
+            newDragonUI.GetComponent<Button>().onClick.AddListener(delegate { EggPanel(); });
+        }
+    }
+
+    private void GetNextIndex()
+    {
+        nextIndex = myDragons.Length;
         for (int i = 0; i < myDragons.Length; i++)
         {
             if (myDragons[i] == null)
@@ -149,14 +182,6 @@ public class GameController : MonoBehaviour
                 nextIndex = i;
                 break;
             }
-        }
-
-        foreach (DragonInfo dragon in myDragons)
-        {
-            if (dragon == null) continue;
-
-            GameObject dragonUI = Instantiate(dragonListPrefab, dragonList);
-            dragonUI.GetComponent<Button>().onClick.AddListener(delegate { ShowDragon(dragon); });
         }
     }
 
@@ -189,6 +214,44 @@ public class GameController : MonoBehaviour
         }
 
         dragonList.gameObject.SetActive(false);
+    }
+
+    public void ShowReleaseDragonPanel(DragonInfo info)
+    {
+        HideDragon();
+        releasePanel.SetActive(true);
+        dragonList.gameObject.SetActive(false);
+        releaseButton.onClick.RemoveAllListeners();
+        releaseButton.onClick.AddListener(delegate { ReleaseDragon(info); });
+    }
+
+    private void ReleaseDragon(DragonInfo info)
+    {
+        int releasedDragonIndexUI = info.indexUI;
+        int releasedDragonIndex = info.index;
+        myDragons[releasedDragonIndex] = null;
+
+        //unparent childs of dragonList and destroy them cause destroy will happen next frame which will be too late for a loop
+        if(dragonList.childCount < myDragons.Length)
+        {
+            Transform childNewDragon = dragonList.GetChild(dragonList.childCount - 1);
+            childNewDragon.SetParent(null);
+            Destroy(childNewDragon.gameObject);
+        }
+        Transform childReleasedDragon = dragonList.GetChild(releasedDragonIndexUI);
+        childReleasedDragon.SetParent(null);
+        Destroy(childReleasedDragon.gameObject);
+
+        //set indexUI for all dragons which have higher indexUI than released dragon
+        for (int i = 0; i < myDragons.Length; i++)
+        {
+            if (myDragons[i] != null && myDragons[i].indexUI > releasedDragonIndexUI)
+            {                
+                myDragons[i].indexUI--;
+            }
+        }
+        releasePanel.SetActive(false);
+        RefreshDragonList();
     }
 
     public void ShowExpeditionPanel(DragonInfo info)
@@ -230,7 +293,7 @@ public class GameController : MonoBehaviour
         currentExpeditionInfo = Instantiate(expeditionInfoPrefab, expeditionList.parent);
         int level = expedition.level-1;
         currentExpeditionInfo.transform.GetComponent<ExpeditionInfo>().SetUp(expedition);
-        currentExpeditionInfo.transform.Find("ButtonStart").GetComponent<Button>().onClick.AddListener(delegate { StartExpedition(expedition.data[level].expeditionTime, expedition, info); });
+        currentExpeditionInfo.transform.Find("ButtonStart").GetComponent<Button>().onClick.AddListener(delegate { StartExpedition(expedition.currentData.expeditionTime, expedition, info); });
         currentExpeditionInfo.transform.Find("ButtonCancel").GetComponent<Button>().onClick.AddListener(delegate { BackToExpeditionList(info); });
     }
 
@@ -255,9 +318,9 @@ public class GameController : MonoBehaviour
 
     private void StartExpedition(float time, Expedition e, DragonInfo info)
     {
-        dragonList.GetChild(info.index).GetComponent<DragonUI>().RefreshTimerExpedition(time);
+        dragonList.GetChild(info.indexUI).GetComponent<DragonUI>().RefreshTimerExpedition(time);
         info.onExpedition = true;
-        info.currentExpedition = e.index;
+        info.currentExpedition = e.ID;
         int currentCoroutine = coroutines.Count;
         coroutines.Add(StartCoroutine(Expedition(time, currentCoroutine, info.index, e)));
         expeditionPanel.SetActive(false);
@@ -270,7 +333,7 @@ public class GameController : MonoBehaviour
     private IEnumerator Expedition(float time, int indexCoro, int indexDragon, Expedition e)
     {
         myDragons[indexDragon].remainingExpeditionTime = time;
-        dragonList.GetChild(indexDragon).GetComponent<DragonUI>().RefreshTimerExpedition(time);
+        dragonList.GetChild(myDragons[indexDragon].indexUI).GetComponent<DragonUI>().RefreshTimerExpedition(time);
 
         yield return new WaitForSeconds(1f);
 
@@ -278,7 +341,7 @@ public class GameController : MonoBehaviour
 
         if (time <= 0)
         {
-            dragonList.GetChild(indexDragon).GetComponent<DragonUI>().RefreshTimerExpedition(time);
+            dragonList.GetChild(myDragons[indexDragon].indexUI).GetComponent<DragonUI>().RefreshTimerExpedition(time);
             coroutines[indexCoro] = null;
             myDragons[indexDragon].onExpedition = false;
             myDragons[indexDragon].remainingExpeditionTime = 0;
@@ -287,7 +350,7 @@ public class GameController : MonoBehaviour
         }
         else
         {
-            dragonList.GetChild(indexDragon).GetComponent<DragonUI>().RefreshTimerExpedition(time);
+            dragonList.GetChild(myDragons[indexDragon].indexUI).GetComponent<DragonUI>().RefreshTimerExpedition(time);
             coroutines[indexCoro] = StartCoroutine(Expedition(time, indexCoro, indexDragon, e));
         }
     }
@@ -325,12 +388,15 @@ public class GameController : MonoBehaviour
     public void StartEating(float time, DragonInfo info)
     {
         int currentCoroutine = coroutines.Count;
+        dragonList.GetChild(info.indexUI).GetComponent<DragonUI>().RefreshTimer("Can eat in", time);
         coroutines.Add(StartCoroutine(Eating(time, currentCoroutine, info.index)));
+        RefreshDragonList();
     }
 
     private IEnumerator Eating(float time, int indexCoro, int indexDragon)
     {
         myDragons[indexDragon].remainingEatingTime = time;
+        dragonList.GetChild(myDragons[indexDragon].indexUI).GetComponent<DragonUI>().RefreshTimer("Can eat in", time);
 
         yield return new WaitForSeconds(1f);
 
@@ -338,14 +404,17 @@ public class GameController : MonoBehaviour
 
         if (time <= 0)
         {
+            dragonList.GetChild(myDragons[indexDragon].indexUI).GetComponent<DragonUI>().RefreshTimer("Can eat in", time);
             coroutines[indexCoro] = null;
             myDragons[indexDragon].canEat = true;
             myDragons[indexDragon].remainingEatingTime = time;
             if (currentDragon != null)
                 currentDragon.CheckEating();
+            RefreshDragonList();
         }
         else
         {
+            dragonList.GetChild(myDragons[indexDragon].indexUI).GetComponent<DragonUI>().RefreshTimer("Can eat in", time);
             coroutines[indexCoro] = StartCoroutine(Eating(time, indexCoro, indexDragon));
             myDragons[indexDragon].remainingEatingTime = time;
         }
@@ -392,37 +461,39 @@ public class GameController : MonoBehaviour
     {
         int currentCoroutine = coroutines.Count;
         coroutines.Add(StartCoroutine(Hatching(time, currentCoroutine, newDragon.index)));
+        dragonList.GetChild(newDragon.indexUI).GetComponent<DragonUI>().RefreshTimer("Hatching", time);
         RefreshDragonList();
     }
 
     private IEnumerator Hatching(float time, int indexCoro, int indexDragon)
     {
         myDragons[indexDragon].remainingHatchingTime = time;
-        dragonList.GetChild(indexDragon).GetComponent<DragonUI>().RefreshTimerHatching(time);
-
+        dragonList.GetChild(myDragons[indexDragon].indexUI).GetComponent<DragonUI>().RefreshTimer("Hatching", time);
+            
         yield return new WaitForSeconds(1f);
 
         time -= 1;
 
         if (time <= 0)
         {
+            dragonList.GetChild(myDragons[indexDragon].indexUI).GetComponent<DragonUI>().RefreshTimer("Hatching", time);
             coroutines[indexCoro] = null;
             myDragons[indexDragon].hatching = false;
             myDragons[indexDragon].toName = true;
             myDragons[indexDragon].remainingHatchingTime = 0;
-            if(currentEgg != null)
+            if (currentEgg != null)
                 currentEgg.EndHatching();
             RefreshDragonList();
         }
         else
         {
-            dragonList.GetChild(indexDragon).GetComponent<DragonUI>().RefreshTimerHatching(time);
+            dragonList.GetChild(myDragons[indexDragon].indexUI).GetComponent<DragonUI>().RefreshTimer("Hatching", time);
             myDragons[indexDragon].remainingHatchingTime = time;
             coroutines[indexCoro] = StartCoroutine(Hatching(time, indexCoro, indexDragon));
         }
     }
 
-    private void EggPanel()
+    public void EggPanel()
     {
         eggsPanel.SetActive(true);
         warningBlueprintsText.SetActive(false);
@@ -479,7 +550,7 @@ public class GameController : MonoBehaviour
 
     public void NewEgg(DragonInfo info)
     {
-        Destroy(dragonList.GetChild(nextIndex).gameObject);
+        Destroy(newDragonUI);
         AddDragon(info);
         dragonList.gameObject.SetActive(false);
         eggsPanel.SetActive(false);
@@ -492,7 +563,7 @@ public class GameController : MonoBehaviour
             return;
         }
 
-        Destroy(dragonList.GetChild(nextIndex).gameObject);
+        Destroy(newDragonUI);
         AddDragon(info);  
         eggsPanel.SetActive(false);
         inventory.RemoveItem(blueprint);

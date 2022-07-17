@@ -11,7 +11,8 @@ public class DragonInfo : ScriptableObject
     public GameObject prefabBaby;
     public GameObject prefabAdult;
     public GameObject prefabEgg;
-    public Sprite look;
+    public Sprite lookBaby;
+    public Sprite lookAdult;
     public Sprite eggLook;
     public float hatchingTime;
     public float eatingTime;
@@ -26,6 +27,7 @@ public class DragonInfo : ScriptableObject
     public bool loot;
     public bool canEat;
     public int index = -1;
+    public int indexUI = -1;
 
     [Header("Stats")]
     public int maxHealth = 100;

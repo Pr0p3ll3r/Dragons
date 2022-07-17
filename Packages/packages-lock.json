@@ -56,7 +56,7 @@
       "dependencies": {}
     },
     "com.unity.2d.spriteshape": {
-      "version": "7.0.4",
+      "version": "7.0.5",
       "depth": 0,
       "source": "registry",
       "dependencies": {

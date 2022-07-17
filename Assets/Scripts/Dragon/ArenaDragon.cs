@@ -19,7 +19,7 @@ public class ArenaDragon : MonoBehaviour
     public void SetUp(int i)
     {
         DragonInfo enemy = Database.database.enemyDragons[i];
-        look.sprite = enemy.look;
+        look.sprite = enemy.lookAdult;
         dragonName.text = enemy.dragonName;
         level.text = enemy.level.ToString();
         health.text = enemy.maxHealth.ToString();

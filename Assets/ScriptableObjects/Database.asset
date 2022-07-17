@@ -67,3 +67,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 33beb6d05e532f642bcd8d2769ee6c2a, type: 2}
   expeditions:
   - {fileID: 11400000, guid: 2fec22345ad683745abb831ed24c298d, type: 2}
+  - {fileID: 11400000, guid: 30627fb93339e8540a186c31c4f48e8b, type: 2}
+  - {fileID: 11400000, guid: 4a265567c11210142888df31b32fc514, type: 2}
+  - {fileID: 11400000, guid: 737cbcd9a58d16b4680d1efbd7f96fc4, type: 2}
+  - {fileID: 11400000, guid: ed1bef76139fd854e856f0edc7155144, type: 2}

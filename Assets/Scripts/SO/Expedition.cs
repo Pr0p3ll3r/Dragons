@@ -5,9 +5,9 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Expedition", menuName = "ScriptableObjects/Expedition")]
 public class Expedition : ScriptableObject
 {
+    public int ID = 0;
     public string placeName;
     public Sprite thumbnail;
-    public int index = 0;
     public int level = 1;
     public int exp = 0;
     public ExpeditionData[] data;

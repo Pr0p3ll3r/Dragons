@@ -17,8 +17,9 @@ MonoBehaviour:
   prefabBaby: {fileID: 0}
   prefabAdult: {fileID: 0}
   prefabEgg: {fileID: 0}
-  look: {fileID: 21300000, guid: 1501b35d73a48c744bdf32ab20d7e6ce, type: 3}
-  eggLook: {fileID: 0}
+  lookBaby: {fileID: 21300000, guid: f399077ef3fad9e4daacf39a8666a22a, type: 3}
+  lookAdult: {fileID: 21300000, guid: a1b6b97a69fcc484aacfe2a659e53526, type: 3}
+  eggLook: {fileID: 21300000, guid: 58af38564ca071a4d8c453a1fed15165, type: 3}
   hatchingTime: 0
   eatingTime: 0
   isEgg: 0
@@ -32,6 +33,7 @@ MonoBehaviour:
   loot: 0
   canEat: 0
   index: -1
+  indexUI: -1
   maxHealth: 50
   currentHealth: 50
   stats:

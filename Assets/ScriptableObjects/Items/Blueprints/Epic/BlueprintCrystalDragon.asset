@@ -23,6 +23,6 @@ MonoBehaviour:
   type: 1
   resources:
   - name: Gold
-    amount: 10
+    amount: 1
   - name: Silver
     amount: 10

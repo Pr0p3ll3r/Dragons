@@ -11,12 +11,14 @@ public class DragonUI : MonoBehaviour
     [SerializeField] private Image look;
     [SerializeField] private Animation anim;
     [SerializeField] private Button button;
+    [SerializeField] private Button buttonRelease;
+    private DragonInfo dragon;
 
     public void RefreshTimerExpedition(float time)
     {
         TimeSpan timeSpan = TimeSpan.FromSeconds(time);
         string timeString = timeSpan.ToString(@"hh\:mm\:ss");
-        timer.text = $"Back in " + timeString;
+        timer.text = $"Back in\n" + timeString;
 
         if (time <= 0)
         {
@@ -25,15 +27,22 @@ public class DragonUI : MonoBehaviour
         }
     }
 
-    public void RefreshTimerHatching(float time)
+    public void RefreshTimer(string text, float time)
     {
+        if (dragon.onExpedition || dragon.loot)
+            return;
+
         TimeSpan timeSpan = TimeSpan.FromSeconds(time);
         string timeString = timeSpan.ToString(@"hh\:mm\:ss");
-        timer.text = timeString;
+        timer.text = text + "\n" + timeString;
     }
 
-    public void SetUp(DragonInfo dragon)
+    public void SetUp(DragonInfo _dragon)
     {
+        dragon = _dragon;
+        look.gameObject.SetActive(false);
+        timer.gameObject.SetActive(true);
+
         if (dragon.shown)
         {
             button.interactable = false;
@@ -48,7 +57,7 @@ public class DragonUI : MonoBehaviour
             look.gameObject.SetActive(true);
             timer.gameObject.SetActive(false);
         }
-        else if (dragon.hatching && dragon.isEgg)
+        else if (dragon.hatching && dragon.isEgg || !dragon.canEat)
         {
             look.gameObject.SetActive(false);
             timer.gameObject.SetActive(true);
@@ -64,6 +73,7 @@ public class DragonUI : MonoBehaviour
             look.gameObject.SetActive(false);
             timer.gameObject.SetActive(true);
             button.interactable = true;
+            timer.text = "LOOT!";
             timer.gameObject.GetComponent<Animation>().Play("Flash");
         }
         else
@@ -73,9 +83,20 @@ public class DragonUI : MonoBehaviour
             timer.gameObject.GetComponent<Animation>().Play("Idle");
         }
 
-        if (dragon.isEgg)
+        //set look
+        if (dragon.toName)
+            look.sprite = Database.database.dragons[dragon.ID].lookBaby;
+        else if (dragon.isEgg)
             look.sprite = Database.database.dragons[dragon.ID].eggLook;
+        else if (!dragon.isAdult)
+            look.sprite = Database.database.dragons[dragon.ID].lookBaby;
         else
-            look.sprite = Database.database.dragons[dragon.ID].look;
+            look.sprite = Database.database.dragons[dragon.ID].lookAdult;
+
+        //check if can release
+        if (dragon.hatching || dragon.onExpedition || dragon.loot || !dragon.canEat)
+            buttonRelease.interactable = false;
+        else
+            buttonRelease.interactable = true;
     }
 }

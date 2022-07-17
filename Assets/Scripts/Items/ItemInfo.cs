@@ -94,18 +94,20 @@ public class ItemInfo : MonoBehaviour
         else if(item.itemType == ItemType.Blueprint)
         {
             Blueprint blueprint = (Blueprint)item;
-            foreach(Resource r in blueprint.resources)
+            ItemStatInfo stat = Instantiate(statPrefab, statParent).GetComponent<ItemStatInfo>();
+            stat.SetUp($"Dragon Type: {blueprint.type}");
+            foreach (Resource r in blueprint.resources)
             {
-                ItemStatInfo stat = Instantiate(resourcePrefab, resourceParent).GetComponent<ItemStatInfo>();
-                stat.SetUp($"{r.amount}", Database.database.items[Database.database.GetIdByName("Gold")].icon);
+                ItemStatInfo resource = Instantiate(resourcePrefab, resourceParent).GetComponent<ItemStatInfo>();
+                resource.SetUp($"{r.amount}", Database.database.items[Database.database.GetIdByName(r.name)].icon);
 
-                if (Inventory.Instance.resources.data[Inventory.Instance.GetIdByName("Gold")].amount > r.amount)
+                if (Inventory.Instance.resources.data[Inventory.Instance.GetIdByName(r.name)].amount > r.amount)
                 {
-                    stat.SetColor(Color.green);
+                    resource.SetColor(Color.green);
                 }
                 else
                 {
-                    stat.SetColor(Color.red);
+                    resource.SetColor(Color.red);
                 }
             }
         }

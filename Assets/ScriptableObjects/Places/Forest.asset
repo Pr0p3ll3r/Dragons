@@ -14,10 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ID: 0
   placeName: Forest
-  thumbnail: {fileID: 21300000, guid: ed13c49cdb82a2043a432302853cd997, type: 3}
-  index: 0
+  thumbnail: {fileID: 21300000, guid: 38e4a53c88673984783d6236860c3696, type: 3}
   level: 1
-  exp: 1
+  exp: 0
   data:
   - name: Level 1
     resources:

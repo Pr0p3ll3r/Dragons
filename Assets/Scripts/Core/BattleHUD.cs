@@ -21,7 +21,7 @@ public class BattleHUD : MonoBehaviour
 
 	public void SetHUD(DragonInfo dragon)
 	{
-		look.sprite = dragon.look;
+		look.sprite = dragon.lookAdult;
 		nameText.text = dragon.dragonName;
 		levelText.text = "Lvl: " + dragon.level.ToString();
 		damageText.text = "Damage: " + dragon.stats[(int)StatType.Damage].GetValue().ToString();

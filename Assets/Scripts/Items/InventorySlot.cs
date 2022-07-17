@@ -37,5 +37,6 @@ public class InventorySlot : MonoBehaviour
         icon.sprite = null;
         icon.enabled = false;
         buttonRemove.SetActive(false);
+        Inventory.Instance.DestroyItemInfo();
     }
 }

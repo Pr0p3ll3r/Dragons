@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class MouseDrag : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+public class MouseDrag : MonoBehaviour//, IPointerDownHandler, IPointerUpHandler
 {
     bool dragging = false;
     Vector3 mouseStartPos;
@@ -31,15 +31,15 @@ public class MouseDrag : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
         dragging = false;
     }
 
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        dragging = true;
-        mouseStartPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        objectStartPos = transform.root.position;
-    }
+    //public void OnPointerDown(PointerEventData eventData)
+    //{
+    //    dragging = true;
+    //    mouseStartPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+    //    objectStartPos = transform.root.position;
+    //}
 
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        dragging = false;
-    }
+    //public void OnPointerUp(PointerEventData eventData)
+    //{
+    //    dragging = false;
+    //}
 }
