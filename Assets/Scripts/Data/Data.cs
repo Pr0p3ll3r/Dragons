@@ -6,6 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
+using UnityEngine.Profiling;
 
 public static class Data
 {
@@ -199,11 +200,11 @@ public static class Data
         return localDateTime;
     }
 
-    public static float PassedTime()
+    public static float PassedTime(string profileID)
     {
         float passedTime;
 
-        long previousTime = Convert.ToInt64(PlayerPrefs.GetString("offlineTime"));
+        long previousTime = Convert.ToInt64(PlayerPrefs.GetString("offlineTime" + profileID));
         DateTime oldTime = DateTime.FromBinary(previousTime);
         DateTime currentDate = GetNetTime();
         TimeSpan diff = currentDate.Subtract(oldTime);

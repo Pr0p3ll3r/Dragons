@@ -90,9 +90,9 @@ public class GameController : MonoBehaviour
             Data.Load(profileID);
             mainButtons[0].transform.parent.gameObject.SetActive(true);
             eggsPanel.SetActive(false);
+            LoadCoroutines();
         }
-        CreateDragonList();
-        LoadCoroutines();
+        CreateDragonList();      
         releasePanel.SetActive(false);
         quitMenu.SetActive(false);
         arenaPanel.SetActive(false);
@@ -576,7 +576,7 @@ public class GameController : MonoBehaviour
 
     private void LoadCoroutines()
     {
-        float passedTime = Data.PassedTime();
+        float passedTime = Data.PassedTime(profileID);
         //Debug.Log("Passed Time: " + passedTime);
         foreach (DragonInfo d in myDragons)
         {

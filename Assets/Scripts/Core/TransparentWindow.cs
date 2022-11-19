@@ -7,8 +7,6 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using Button = UnityEngine.UI.Button;
 
 public class TransparentWindow : MonoBehaviour
 {
@@ -67,7 +65,7 @@ public class TransparentWindow : MonoBehaviour
 
     void Start()
     {      
-        currentdesktopPath = GetCurrentDesktopWallpaperPath();
+        //currentdesktopPath = GetCurrentDesktopWallpaperPath();
 
 #if !UNITY_EDITOR
         hWnd = GetActiveWindow();
@@ -85,8 +83,8 @@ public class TransparentWindow : MonoBehaviour
         //Window on top
         //SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, 0);
 
-        string imgWallpaper = UnityEngine.Application.dataPath + "/StreamingAssets/Background.jpg";
-        SetWallpaper(imgWallpaper);
+        //string imgWallpaper = UnityEngine.Application.dataPath + "/StreamingAssets/Background.jpg";
+        //SetWallpaper(imgWallpaper);
 #endif
         UnityEngine.Application.runInBackground = true;
     }
@@ -109,7 +107,7 @@ public class TransparentWindow : MonoBehaviour
     private void OnApplicationQuit()
     {
 #if !UNITY_EDITOR
-        SetWallpaper(currentdesktopPath);
+        //SetWallpaper(currentdesktopPath);
         tray?.Dispose();
         tray = null;
 #endif
